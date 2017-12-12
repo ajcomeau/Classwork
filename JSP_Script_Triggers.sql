@@ -281,7 +281,6 @@ IF EXISTS(SELECT *
 	BEGIN
 		RAISERROR('Specified LeadID does not exist. Error in foreign key.',16,1)
 		ROLLBACK TRANSACTION 
-
 	END
 	PRINT @@TRANCOUNT
 END
@@ -334,3 +333,22 @@ INSERT INTO Activities (LeadID, ActivityType) VALUES (1, 'Resume')
 DELETE FROM Leads
 
 select * from Leads
+
+
+/*
+Test Checklist
+
+1.) INSERT or UPDATE to Leads must fail any non-null non-existent values for:
+	-	CompanyID
+	-	AgencyID
+	-	ContactID
+	-	SourceID
+2.) DELETE from Leads must fail for any records referenced by Activities table.
+3.) INSERT or UPDATE to Activities must fail for any non-null, non-existent values for ActivityType.
+4.) DELETE or UPDATE to ActivityTypes must catch any records referenced by Activities
+	- UPDATE can either be denied or matching rows in Activities can be updated.
+5.) DELETE or UPDATE to BusinessTypes must catch any records referenced by Companies
+	- UPDATE can either be denied or matching rows in Companies can be updated.
+7.) DELETE from Sources must fail for any records referenced by Leads
+8.) DELETE from Companies must fail for any records referenced by Leads or Contacts.
+9.) DELETE from Contacts must fail for any recors referenced by Leads or Companies
