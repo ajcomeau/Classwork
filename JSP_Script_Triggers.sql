@@ -218,8 +218,7 @@ CREATE TABLE Leads
 	Selected bit
 	CONSTRAINT DF_Leads_Selected DEFAULT (0),
 	CONSTRAINT PK_Leads PRIMARY KEY (LeadID),
-	CONSTRAINT CK_NoFutureLads CHECK (RecordDate <= GETDATE()),
-	CONSTRAINT CK_AgencyRestrict CHECK (AgencyID IN (SELECT CompanyID FROM Companies WHERE Agency <> 0))
+	CONSTRAINT CK_NoFutureLads CHECK (RecordDate <= GETDATE())
 )
 
 CREATE INDEX IDX_Leads_RecordDate ON Leads(RecordDate)
@@ -265,9 +264,44 @@ END
 GO
 
 -- Adding foreign keys
-
+/*
 ALTER TABLE Activities
 	ADD CONSTRAINT FK_Activities_Leads FOREIGN KEY(LeadID) REFERENCES Leads(LeadID)
+*/
+
+CREATE TRIGGER TRG_ActivityModify
+ON Activities
+AFTER INSERT, UPDATE
+AS
+BEGIN
+PRINT @@TRANCOUNT
+IF EXISTS(SELECT * 
+	FROM inserted i 
+	WHERE i.LeadID NOT IN (SELECT LeadID FROM Leads))
+	BEGIN
+		RAISERROR('Specified LeadID does not exist. Error in foreign key.',16,1)
+		ROLLBACK TRANSACTION 
+
+	END
+	PRINT @@TRANCOUNT
+END
+GO
+
+CREATE TRIGGER TRG_ActivityDelete
+ON Leads
+AFTER DELETE
+AS
+BEGIN
+
+IF EXISTS(SELECT * 
+	FROM deleted i 
+	WHERE i.LeadID IN (select distinct LeadID FROM Activities))
+	BEGIN
+		RAISERROR('Specified LeadID referenced by Activity records. Record not deleted.',16,1)
+		ROLLBACK TRANSACTION 
+	END
+END
+GO
 
 
 ALTER TABLE Leads
@@ -291,6 +325,12 @@ ALTER TABLE Activities
 	ADD
 	CONSTRAINT FK_Activities_ActivityTypes FOREIGN KEY(ActivityType) REFERENCES ActivityTypes(ActivityType)
 
+-- INSERT RECORDS
 
+INSERT INTO Leads (JobTitle) VALUES ('Programmer')
+INSERT INTO ActivityTypes (ActivityType) VALUES ('Resume')
+INSERT INTO Activities (LeadID, ActivityType) VALUES (1, 'Resume')
 
-	
+DELETE FROM Leads
+
+select * from Leads
