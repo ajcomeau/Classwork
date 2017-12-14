@@ -1,4 +1,5 @@
 
+-- Job Search Plus Script with Triggers
 
 USE MASTER
 GO
