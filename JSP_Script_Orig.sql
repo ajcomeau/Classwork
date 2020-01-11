@@ -218,9 +218,7 @@ CREATE TABLE Leads
 	Selected bit
 	CONSTRAINT DF_Leads_Selected DEFAULT (0),
 	CONSTRAINT PK_Leads PRIMARY KEY (LeadID),
-	CONSTRAINT CK_NoFutureLads CHECK (RecordDate <= GETDATE()),
-	CONSTRAINT CK_AgencyRestrict CHECK (AgencyID IN (SELECT CompanyID FROM Companies WHERE Agency <> 0))
-)
+	CONSTRAINT CK_NoFutureLads CHECK (RecordDate <= GETDATE()))
 
 CREATE INDEX IDX_Leads_RecordDate ON Leads(RecordDate)
 CREATE INDEX IDX_Leads_JobTitle ON Leads(JobTitle)
